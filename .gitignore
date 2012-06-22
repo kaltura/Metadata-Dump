@@ -1,0 +1,6 @@
+.DS_Store
+node_modules
+.project
+.settings/
+kalturaConfig.php
+lib/PHPExcel/Tests/
