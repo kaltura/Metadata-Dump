@@ -78,11 +78,12 @@ while($cont) {
 		$lastCreatedAt = $entry->createdAt;
 		++$k;
 	}
+	print '<pre>'.print_r($results, true).'</pre>';
 	$metadataFilter = new KalturaMetadataFilter();
 	$metadataFilter->objectIdIn = $entryIds;
 	$results = $client->metadata->listAction($metadataFilter, $pager);
-	print $entryIds.'<br>';
-	print '<pre>'.print_r($results, true).'</pre>';
+// 	print $entryIds.'<br>';
+// 	print '<pre>'.print_r($results, true).'</pre>';
 }
 	$objPHPExcel->setActiveSheetIndex(0);
 	$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
