@@ -19,21 +19,15 @@ $filter->orderBy = "-createdAt";
 $results = $client->media->listAction($filter, $pager);
 $entry = $results->objects[0];
 foreach($entry as $data => $value) {
-	if($j < 26)
-		$cell = sprintf("%c1", 65+$j);
-	elseif($j < 52)
-		$cell = sprintf("A%c1", 65+($j % 26));
-	elseif($j < 78)
-		$cell = sprintf("B%c1", 65+($j % 26));
-	else
-		$cell = sprintf("C%c1", 65+($j % 26));
+	$cell = generateCell($j, 1);
 	$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $data);
 	++$j;
 }
-$pageSize = 500;
+$pageSize = 5;
 $pager->pageSize = $pageSize;
 $lastCreatedAt = 0;
 $lastEntryIds = "";
+$metaFound = false;
 $cont = true;
 $k = 2;
 while($cont) {
@@ -51,22 +45,39 @@ while($cont) {
 	if(count($results->objects) == 0) {
 		$cont = false;
 	}
-	$entryIds = "";
 	foreach($results->objects as $entry) {
-		if($entryIds != "")
-			$entryIds .= ",";
-		$entryIds .= $entry->id;
 		$j = 0;
 		foreach($entry as $value) {
-			if($j < 26)
-				$cell = sprintf("%c%d", 65+$j, $k);
-			elseif($j < 52)
-				$cell = sprintf("A%c%d", 65+($j % 26), $k);
-			else
-				$cell = sprintf("B%c%d", 65+($j % 26), $k);
-			if(is_string($value))
+			$cell = generateCell($j, $k);
+			if(is_string($value) || is_numeric($value))
 				$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $value);
 			++$j;
+		}
+		$metadataFilter = new KalturaMetadataFilter();
+		$metadataFilter->objectIdIn = $entry->id;
+		$metaResult = $client->metadata->listAction($metadataFilter, $pager)->objects;
+		if(isset($metaResult[0])) {
+			print '<pre>'.print_r($metaResult[0], true).'</pre>';
+			foreach($metaResult[0] as $key => $value) {
+				if($metaFound === false) {
+					$cell = generateCell($j, 1);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $key);
+					if(strcmp($key, 'status') == 0)
+						$metaFound = true;
+				}
+				$cell = generateCell($j, $k);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $value);
+				++$j;
+			}
+			--$j;
+			$profileId = $metaResult[0]->id;
+			$metadata = $client->metadata->get($profileId);				
+			$xml = simplexml_load_string($metadata->xml);
+			foreach($xml as $key => $value) {
+				$cell = generateCell($j, $k);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $value);
+				++$j;
+			}
 		}
 		//Keeps a tally of which creation dates were examined
 		//and which entry ids have already been seen
@@ -78,13 +89,19 @@ while($cont) {
 		$lastCreatedAt = $entry->createdAt;
 		++$k;
 	}
-	print '<pre>'.print_r($results, true).'</pre>';
-	$metadataFilter = new KalturaMetadataFilter();
-	$metadataFilter->objectIdIn = $entryIds;
-	$results = $client->metadata->listAction($metadataFilter, $pager);
-// 	print $entryIds.'<br>';
-// 	print '<pre>'.print_r($results, true).'</pre>';
+ 	$cont = false;
 }
-	$objPHPExcel->setActiveSheetIndex(0);
-	$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
-	$objWriter->save('metadata.xlsx');
+$objPHPExcel->setActiveSheetIndex(0);
+$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+$objWriter->save('metadata.xlsx');
+	
+function generateCell($column, $row) {
+	$cell = "";
+	if($column/26 < 1) {
+		$cell = sprintf("%c%d", 65 + $column, $row);
+	}
+	else {
+		$cell = sprintf("%c%c%d", 65 + (int)($column / 26 - 1), 65 + ($column % 26), $row);
+	}
+	return $cell;
+}
