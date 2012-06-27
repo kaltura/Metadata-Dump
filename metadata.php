@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors',1);
+error_reporting(E_ALL);
+
 function generateCell($column, $row) {
 	$cell = "";
 	if($column/26 < 1) {
@@ -32,7 +35,7 @@ foreach($entry as $data => $value) {
 	$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $data);
 	++$j;
 }
-$pageSize = 5;
+$pageSize = 500;
 $pager->pageSize = $pageSize;
 $lastCreatedAt = 0;
 $lastEntryIds = "";
@@ -54,7 +57,7 @@ while($cont) {
 	$results = $client->media->listAction($filter, $pager);
 	//If no entries are retrieved the loop may end
 	if(count($results->objects) == 0) {
-		$cont = false;
+		break;
 	}
 	foreach($results->objects as $entry) {
 		$j = 0;
@@ -67,7 +70,8 @@ while($cont) {
 		$metadataFilter = new KalturaMetadataFilter();
 		$metadataFilter->objectIdIn = $entry->id;
 		$metaResults = $client->metadata->listAction($metadataFilter, $pager)->objects;
-		if(isset($metaResults[0])) {
+		print '<pre>'.print_r($metaResults, true).'</pre>'.'<br>'.$k.'<br>';
+		if(array_key_exists(0, $metaResults)) {
 			$firstMeta = true;
 			foreach($metaResults as $metaResult) {
 				if($firstMeta) {
@@ -111,7 +115,7 @@ while($cont) {
 		$lastCreatedAt = $entry->createdAt;
 		++$k;
 	}
- 	$cont = false;
+	break;
 }
 $objPHPExcel->setActiveSheetIndex(0);
 $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
