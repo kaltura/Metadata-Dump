@@ -56,66 +56,68 @@ while($cont) {
 			$filter->idNotIn = $lastEntryIds;
 	$results = $client->media->listAction($filter, $pager);
 	//If no entries are retrieved the loop may end
-	if(count($results->objects) == 0) {
-		break;
+	if($results->totalCount = 0) {
+		$cont = false;
 	}
-	foreach($results->objects as $entry) {
-		$j = 0;
-		foreach($entry as $value) {
-			$cell = generateCell($j, $k);
-			if(is_string($value) || is_numeric($value))
-				$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $value);
-			++$j;
-		}
-		$metadataFilter = new KalturaMetadataFilter();
-		$metadataFilter->objectIdIn = $entry->id;
-		$metaResults = $client->metadata->listAction($metadataFilter, $pager)->objects;
-		print '<pre>'.print_r($metaResults, true).'</pre>'.'<br>'.$k.'<br>';
-		if(array_key_exists(0, $metaResults)) {
-			$firstMeta = true;
-			foreach($metaResults as $metaResult) {
-				if($firstMeta) {
-					foreach($metaResult as $key => $value) {
-						if($metaFound === false) {
-							$cell = generateCell($j, 1);
-							$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $key);
-							if(strcmp($key, 'status') == 0)
-								$metaFound = true;
-						}
-						if($key != 'xml') {
-							$cell = generateCell($j, $k);
-							$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $value);
-							++$j;
-						}
-					}
-					$firstMeta = false;
-				}
-				$metadataProfileId = $metaResult->metadataProfileId;
-				$xml = simplexml_load_string($metaResult->xml);
-				foreach($xml as $key => $value) {
-					$index = $metadataProfileId.'_'.$key;
-					if(!array_key_exists($index, $metaKeys)) {
-						$metaKeys[$index] = $keyCount;
-						$cell = generateCell($j + $keyCount, 1);
-						$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $index);
-						++$keyCount;
-					}
-					$cell = generateCell($j + $metaKeys[$index], $k);
+	else {
+		foreach($results->objects as $entry) {
+			$j = 0;
+			foreach($entry as $value) {
+				$cell = generateCell($j, $k);
+				if(is_string($value) || is_numeric($value))
 					$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $value);
+				++$j;
+			}
+			$metadataFilter = new KalturaMetadataFilter();
+			$metadataFilter->objectIdIn = $entry->id;
+			$pager = new KalturaFilterPager();
+			$pager->$pageSize = 10;
+			$metaResults = $client->metadata->listAction($metadataFilter, $pager)->objects;
+			if(array_key_exists(0, $metaResults)) {
+				$firstMeta = true;
+				foreach($metaResults as $metaResult) {
+					if($firstMeta) {
+						foreach($metaResult as $key => $value) {
+							if($metaFound === false) {
+								$cell = generateCell($j, 1);
+								$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $key);
+								if(strcmp($key, 'status') == 0)
+									$metaFound = true;
+							}
+							if($key != 'xml') {
+								$cell = generateCell($j, $k);
+								$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $value);
+								++$j;
+							}
+						}
+						$firstMeta = false;
+					}
+					$metadataProfileId = $metaResult->metadataProfileId;
+					$xml = simplexml_load_string($metaResult->xml);
+					foreach($xml as $key => $value) {
+						$index = $metadataProfileId.'_'.$key;
+						if(!array_key_exists($index, $metaKeys)) {
+							$metaKeys[$index] = $keyCount;
+							$cell = generateCell($j + $keyCount, 1);
+							$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $index);
+							++$keyCount;
+						}
+						$cell = generateCell($j + $metaKeys[$index], $k);
+						$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $value);
+					}
 				}
 			}
+			//Keeps a tally of which creation dates were examined
+			//and which entry ids have already been seen
+			if($lastCreatedAt != $entry->createdAt)
+				$lastEntryIds = "";
+			if($lastEntryIds != "")
+				$lastEntryIds .= ",";
+			$lastEntryIds .= $entry->id;
+			$lastCreatedAt = $entry->createdAt;
+			++$k;
 		}
-		//Keeps a tally of which creation dates were examined
-		//and which entry ids have already been seen
-		if($lastCreatedAt != $entry->createdAt)
-			$lastEntryIds = "";
-		if($lastEntryIds != "")
-			$lastEntryIds .= ",";
-		$lastEntryIds .= $entry->id;
-		$lastCreatedAt = $entry->createdAt;
-		++$k;
 	}
-	break;
 }
 $objPHPExcel->setActiveSheetIndex(0);
 $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
