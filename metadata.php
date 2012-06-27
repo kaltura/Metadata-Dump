@@ -36,10 +36,10 @@ $pageSize = 5;
 $pager->pageSize = $pageSize;
 $lastCreatedAt = 0;
 $lastEntryIds = "";
-$metaKeys = array();
 $metaFound = false;
 $cont = true;
 $k = 2;
+$metaKeys = array();
 $keyCount = 0;
 while($cont) {
 	//Instead of using a page index, the entries are retrieved by creation date
@@ -66,33 +66,39 @@ while($cont) {
 		}
 		$metadataFilter = new KalturaMetadataFilter();
 		$metadataFilter->objectIdIn = $entry->id;
-		$metaResult = $client->metadata->listAction($metadataFilter, $pager)->objects;
-		if(isset($metaResult[0])) {
-			foreach($metaResult[0] as $key => $value) {
-				if($metaFound === false) {
-					$cell = generateCell($j, 1);
-					$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $key);
-					if(strcmp($key, 'status') == 0)
-						$metaFound = true;
+		$metaResults = $client->metadata->listAction($metadataFilter, $pager)->objects;
+		if(isset($metaResults[0])) {
+			$firstMeta = true;
+			foreach($metaResults as $metaResult) {
+				if($firstMeta) {
+					foreach($metaResult as $key => $value) {
+						if($metaFound === false) {
+							$cell = generateCell($j, 1);
+							$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $key);
+							if(strcmp($key, 'status') == 0)
+								$metaFound = true;
+						}
+						if($key != 'xml') {
+							$cell = generateCell($j, $k);
+							$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $value);
+							++$j;
+						}
+					}
+					$firstMeta = false;
 				}
-				if($key != 'xml') {
-					$cell = generateCell($j, $k);
+				$metadataProfileId = $metaResult->metadataProfileId;
+				$xml = simplexml_load_string($metaResult->xml);
+				foreach($xml as $key => $value) {
+					$index = $metadataProfileId.'_'.$key;
+					if(!array_key_exists($index, $metaKeys)) {
+						$metaKeys[$index] = $keyCount;
+						$cell = generateCell($j + $keyCount, 1);
+						$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $index);
+						++$keyCount;
+					}
+					$cell = generateCell($j + $metaKeys[$index], $k);
 					$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $value);
-					++$j;
 				}
-			}
-			$profileId = $metaResult[0]->id;
-			$metadata = $client->metadata->get($profileId);				
-			$xml = simplexml_load_string($metadata->xml);
-			foreach($xml as $key => $value) {
-				if(!array_key_exists($key, $metaKeys)) {
-					$metaKeys[$key] = $keyCount;
-					$cell = generateCell($j + $keyCount, 1);
-					$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $key);
-					++$keyCount;
-				}
-				$cell = generateCell($j + $metaKeys[$key], $k);
-				$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $value);
 			}
 		}
 		//Keeps a tally of which creation dates were examined
