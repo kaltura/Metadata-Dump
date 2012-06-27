@@ -4,4 +4,4 @@ node_modules
 .settings/
 kalturaConfig.php
 lib/PHPExcel/Tests/
-metadata.xlsx
+output/metadata.xlsx
