@@ -1,6 +1,15 @@
 <?php
-ini_set('display_errors',1);
-error_reporting(E_ALL);
+function generateCell($column, $row) {
+	$cell = "";
+	if($column/26 < 1) {
+		$cell = sprintf("%c%d", 65 + $column, $row);
+	}
+	else {
+		$cell = sprintf("%c%c%d", 65 + (int)($column / 26 - 1), 65 + ($column % 26), $row);
+	}
+	return $cell;
+}
+
 require_once('lib/php5/KalturaClient.php');
 require_once 'lib/PHPExcel/Classes/PHPExcel.php';
 $config = new KalturaConfiguration($_REQUEST['partnerId']);
@@ -10,9 +19,9 @@ $client->setKs($_REQUEST['session']);
 $pager = new KalturaFilterPager();
 $objPHPExcel = new PHPExcel();
 $objPHPExcel->getProperties()->setCreator($client->partner->getInfo()->adminEmail)
-							 ->setLastModifiedBy($client->partner->getInfo()->adminEmail)
-							 ->setTitle("Metadata")
-							 ->setDescription("Metadata");
+	->setLastModifiedBy($client->partner->getInfo()->adminEmail)
+	->setTitle("Metadata")
+	->setDescription("Metadata");
 $j = 0;
 $filter = new KalturaMediaEntryFilter();
 $filter->orderBy = "-createdAt";
@@ -27,9 +36,11 @@ $pageSize = 5;
 $pager->pageSize = $pageSize;
 $lastCreatedAt = 0;
 $lastEntryIds = "";
+$metaKeys = array();
 $metaFound = false;
 $cont = true;
 $k = 2;
+$keyCount = 0;
 while($cont) {
 	//Instead of using a page index, the entries are retrieved by creation date
 	//This is the only way to ensure that the server retrieves all of the entries
@@ -57,7 +68,6 @@ while($cont) {
 		$metadataFilter->objectIdIn = $entry->id;
 		$metaResult = $client->metadata->listAction($metadataFilter, $pager)->objects;
 		if(isset($metaResult[0])) {
-			print '<pre>'.print_r($metaResult[0], true).'</pre>';
 			foreach($metaResult[0] as $key => $value) {
 				if($metaFound === false) {
 					$cell = generateCell($j, 1);
@@ -65,18 +75,24 @@ while($cont) {
 					if(strcmp($key, 'status') == 0)
 						$metaFound = true;
 				}
-				$cell = generateCell($j, $k);
-				$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $value);
-				++$j;
+				if($key != 'xml') {
+					$cell = generateCell($j, $k);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $value);
+					++$j;
+				}
 			}
-			--$j;
 			$profileId = $metaResult[0]->id;
 			$metadata = $client->metadata->get($profileId);				
 			$xml = simplexml_load_string($metadata->xml);
 			foreach($xml as $key => $value) {
-				$cell = generateCell($j, $k);
+				if(!array_key_exists($key, $metaKeys)) {
+					$metaKeys[$key] = $keyCount;
+					$cell = generateCell($j + $keyCount, 1);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $key);
+					++$keyCount;
+				}
+				$cell = generateCell($j + $metaKeys[$key], $k);
 				$objPHPExcel->setActiveSheetIndex(0)->setCellValue($cell, $value);
-				++$j;
 			}
 		}
 		//Keeps a tally of which creation dates were examined
@@ -94,14 +110,3 @@ while($cont) {
 $objPHPExcel->setActiveSheetIndex(0);
 $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
 $objWriter->save('metadata.xlsx');
-	
-function generateCell($column, $row) {
-	$cell = "";
-	if($column/26 < 1) {
-		$cell = sprintf("%c%d", 65 + $column, $row);
-	}
-	else {
-		$cell = sprintf("%c%c%d", 65 + (int)($column / 26 - 1), 65 + ($column % 26), $row);
-	}
-	return $cell;
-}
