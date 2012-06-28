@@ -3,6 +3,3 @@ node_modules
 .project
 .settings/
 kalturaConfig.php
-lib/PHPExcel/Tests/
-output/metadata.xlsx
-test.php
