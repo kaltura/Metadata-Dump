@@ -34,7 +34,7 @@ foreach($entry as $data => $value) {
 	echo "<Cell><Data ss:Type=\"String\">".$data."</Data></Cell>\n";
 }
 $pager = new KalturaFilterPager();
-$pager->pageSize = 50;
+$pager->pageSize = 500;
 $lastCreatedAt = 0;
 $lastEntryIds = "";
 $metaFound = false;
@@ -163,7 +163,6 @@ while($cont) {
 		$lastEntryIds .= $entry->id;
 		$lastCreatedAt = $entry->createdAt;
 	}
-	$cont = false;
 }
 echo "</Table>\n</Worksheet>\n";
 echo "</Workbook>";
