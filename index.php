@@ -124,6 +124,7 @@
 </head>
 <body>
 	<div id="userLogin">
+		<!--
 		<form method="post" id="loginForm" action="javascript:loginSubmit();">
 			<div id="emailDiv">
 				Email: <input type="text" id="email" autofocus="autofocus" />
@@ -140,6 +141,20 @@
 			<div>
 				<input type="submit" value="Sign in" id="loginButton" />
 			</div>
+		</form>
+		 -->
+		<form method="post" id="loginForm" action="javascript:loginSubmit();" class="box login">
+			<fieldset class="boxBody">
+				<label>Email</label>
+				<input type="text" tabindex="1" id="email" required>
+				<label>Partner ID</label>
+				<input type="text" tabindex="1" id="partnerId" required>
+				<label>Password</label>
+				<input type="password" tabindex="1" id="password" required>
+			</fieldset>
+			<footer>
+				<input type="submit" class="btnLogin" value="Login" id="loginButton" tabindex="4">
+			</footer>
 		</form>
 	</div>
 	<div id="page" style="display: none;">
