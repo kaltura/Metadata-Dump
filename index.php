@@ -14,56 +14,38 @@
 	<script type="text/javascript">
 		var kalturaSession = "";
 		var partnerId = 0;
-
-		$(document).ready(function() {
-			$('#emailCheck').hide();
-			$('#idCheck').hide();
-			$('#passwordCheck').hide();
-			$('#email').blur(validEmail);
-			$('#partnerId').blur(validId);
-			$('#password').blur(validPassword);
-			$('#email').keyup(validEmail);
-			$('#partnerId').keyup(validId);
-			$('#loginForm').submit(function() {
-				if(validEmail() & validId() & validPassword())
-					return true;
-				else
-					return false;
-			});
-		});
 		
 		//Validation written with help from http://yensdesign.com/tutorials/validateform/validation.js
-		function validEmail() {
-			var a = $("#email").val();
+		function validEmail(input) {
 			var filter = /^[a-zA-Z0-9]+[a-zA-Z0-9_.-]+[a-zA-Z0-9_-]+@[a-zA-Z0-9]+[a-zA-Z0-9.-]+[a-zA-Z0-9]+.[a-z]{2,4}$/;
-			if(!filter.test(a)) {
-				$('#emailCheck').show();
+			if(!filter.test(input.value)) {
+				input.setCustomValidity("Invalid email");
 				return false;
 			}
 			else {
-				$('#emailCheck').hide();
+				input.setCustomValidity('');
 				return true;
 			}
 		}
 
-		function validId() {
-			if(isNaN($('#partnerId').val()) || $('#partnerId').val() == "") {
-				$('#idCheck').show();
+		function validId(input) {
+			if(isNaN(input.value) || input.value == "") {
+				input.setCustomValidity("Invalid Partner ID");
 				return false;
 			}
 			else {
-				$('#idCheck').hide();
+				input.setCustomValidity('');
 				return true;
 			}
 		}
 
-		function validPassword() {
-			if($('#password').val() == '') {
-				$('#passwordCheck').show();
+		function validPassword(input) {
+			if(input.value == '') {
+				input.setCustomValidity("Please enter a password");
 				return false;
 			}
 			else {
-				$('#passwordCheck').hide();
+				input.setCustomValidity('');
 				return true;
 			}
 		}
@@ -124,35 +106,19 @@
 </head>
 <body>
 	<div id="userLogin">
-		<!--
-		<form method="post" id="loginForm" action="javascript:loginSubmit();">
-			<div id="emailDiv">
-				Email: <input type="text" id="email" autofocus="autofocus" />
-				<span id="emailCheck">Invalid email</span>
-			</div>
-			<div id="idDiv">
-				Partner ID: <input type="text" id="partnerId"></input>
-				<span id="idCheck">Invalid Partner ID</span>
-			</div>
-			<div id="passwordDiv">
-				Password: <input type="password" id="password"></input>
-				<span id="passwordCheck">Enter a password!</span>
-			</div>
-			<div>
-				<input type="submit" value="Sign in" id="loginButton" />
-			</div>
-		</form>
-		 -->
 		<form method="post" id="loginForm" action="javascript:loginSubmit();" class="box login">
+			<header>
+				<label style="margin: 2px 46px;">Welcome to the Metadata Dump Tool</label>
+			</header>
 			<fieldset class="boxBody">
 				<label>Email</label>
-				<input type="text" tabindex="1" id="email" required>
+				<input type="text" tabindex="1" id="email" oninput="validEmail(this)" required>
 				<label>Partner ID</label>
-				<input type="text" tabindex="1" id="partnerId" required>
+				<input type="text" tabindex="1" id="partnerId" oninput="validId(this)" required>
 				<label>Password</label>
-				<input type="password" tabindex="1" id="password" required>
+				<input type="password" tabindex="1" id="password" oninput="validPassword(this)" required>
 			</fieldset>
-			<footer>
+			<footer style=>
 				<input type="submit" class="btnLogin" value="Login" id="loginButton" tabindex="4">
 			</footer>
 		</form>
