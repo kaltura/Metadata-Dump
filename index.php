@@ -2,20 +2,21 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<title>Metadata Dump</title>
+	<title>Kaltura Entries & Metadata To Excel Export</title>
 	<!-- Style Includes -->
 	<link href="metadataStyle.css" media="screen" rel="stylesheet" type="text/css" />
-	<link href="lib/jquery-ui-1.8.18.custom.css" rel="stylesheet" type="text/css" />
+	<link href="lib/jQueryUI/jquery-ui-1.8.18.custom.css" rel="stylesheet" type="text/css" />
 	<!-- Script Includes -->
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js" type="text/javascript"></script>
-    <script src="lib/jquery.fileDownload.js" type="text/javascript"></script>
+    <script src="lib/jquery.fileDownload/jquery.fileDownload.js" type="text/javascript"></script>
 	<!-- Page Scripts -->
 	<script type="text/javascript">
 		var kalturaSession = "";
 		var partnerId = 0;
 		
 		//Validation written with help from http://yensdesign.com/tutorials/validateform/validation.js
+		//Makes sure that the email/partner ID/password are valid for login submission
 		function validEmail(input) {
 			var filter = /^[a-zA-Z0-9]+[a-zA-Z0-9_.-]+[a-zA-Z0-9_-]+@[a-zA-Z0-9]+[a-zA-Z0-9.-]+[a-zA-Z0-9]+.[a-z]{2,4}$/;
 			if(!filter.test(input.value)) {
@@ -49,8 +50,10 @@
 				return true;
 			}
 		}
-
+		
+		//Calls metadata.php to create and download the excel file for the user's custom metadata information
 		function downloadMetadata() {
+			//Calls the fileDownload plugin that simulates AJAX for file downloads.
 			var downloadFile = "metadata.php?session=" + kalturaSession + "&partnerId=" + partnerId;
 			var $preparingFileModal = $("#preparing-file-modal");
 	        $preparingFileModal.dialog({ modal: true });
@@ -67,7 +70,9 @@
 	        return true;
 		}
 
+		//Calls categories.php to create and download the excel file for the user's category information
 		function downloadCategories() {
+			//Calls the fileDownload plugin that simulates AJAX for file downloads.
 			var downloadFile = "categories.php?session=" + kalturaSession + "&partnerId=" + partnerId;
 			var $preparingFileModal = $("#preparing-file-modal");
 	        $preparingFileModal.dialog({ modal: true });
@@ -83,51 +88,65 @@
 	        });
 	        return true;
 		}
-		
+
+		//Calls getSession.php to actually sign into the Kaltura API and generate a session key
 		function loginSubmit() {
+			$('#loginButton').hide();
+			$('#loginLoader').show();
 			$.ajax({
 				type: "POST",
 				url: "getSession.php",
 				data: {email: $('#email').val(), partnerId: $('#partnerId').val(), password: $('#password').val()}
 			}).done(function(msg) {
-				if(msg == "loginfail")
+				$('#loginLoader').hide();
+				if(msg == "loginfail") {
 					alert("Invalid username/password");
-				else if(msg == 'idfail')
+					$('#loginButton').show();
+				}
+				else if(msg == 'idfail') {
 					alert("Invalid Partner ID");
+					$('#loginButton').show();
+				}
 				else {
 					kalturaSession = msg;
 					partnerId = $('#partnerId').val();
 					$('#userLogin').hide();
-					$('#page').show();
+					$('#loginButton').hide();
+					$('#loginFooter').css("background", "#FEFEFE");
+					$('#loginForm').animate({height: "163px"}, 400, function() {
+						$('#page').slideDown();
+						$('#categoryButton').slideDown();
+					});
 				}
 			});
 		}
 	</script>
 </head>
 <body>
-	<div id="userLogin">
 		<form method="post" id="loginForm" action="javascript:loginSubmit();" class="box login">
-			<header>
-				<label style="margin: 2px 46px;">Welcome to the Metadata Dump Tool</label>
+			<header style="text-align:center;">
+				<label><h1 style="font-weight:bold;">Kaltura Entries & Metadata To Excel Export</h1></label>
+				<p style="padding-bottom:10px;">Login to your Kaltura account, then download an excel file with all your entries & custom metadata or all categories.</p>
 			</header>
-			<fieldset class="boxBody">
-				<label>Email</label>
-				<input type="text" tabindex="1" id="email" oninput="validEmail(this)" required>
-				<label>Partner ID</label>
-				<input type="text" tabindex="1" id="partnerId" oninput="validId(this)" required>
-				<label>Password</label>
-				<input type="password" tabindex="1" id="password" oninput="validPassword(this)" required>
-			</fieldset>
-			<footer style=>
+			<div id="userLogin">
+				<fieldset class="boxBody">
+					<label>Email</label>
+					<input type="text" tabindex="1" id="email" oninput="validEmail(this)" autofocus="autofocus" required>
+					<label>Partner ID</label>
+					<input type="text" tabindex="1" id="partnerId" oninput="validId(this)" required>
+					<label>Password</label>
+					<input type="password" tabindex="1" id="password" oninput="validPassword(this)" required>
+				</fieldset>
+			</div>
+			<div id="page" class="boxBody" style="display: none;">
+				<button id="metadataButton" type="button" class="metadata" onclick="downloadMetadata()">Download Metadata</button>
+			</div>
+			<footer id="loginFooter">
 				<input type="submit" class="btnLogin" value="Login" id="loginButton" tabindex="4">
+				<img src="lib/loginLoader.gif" id="loginLoader" style="display: none; margin: 9px 130px;">
+				<button id="categoryButton" type="button" class="categories" onclick="downloadCategories()">Download Categories</button>
 			</footer>
 		</form>
-	</div>
-	<div id="page" style="display: none;">
-		<div><img src="lib/loadBar.gif" style="display: none;" id="loadBar"></div>
-		<div id="downloadMetadata">Download all your metadata: <button id="metadataButton" type="button" onclick="downloadMetadata()">Download</button></div>
-		<div id="downloadCategories">Download all your categories: <button id="categoryButton" type="button" onclick="downloadCategories()">Download</button></div>
-	</div>
 	<div id="preparing-file-modal" title="Preparing report..." style="display: none;">
 	    We are preparing your report, please wait...
 	     

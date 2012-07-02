@@ -14,10 +14,12 @@ $loginId = $_REQUEST['email'];
 $password = $_REQUEST['password'];
 $expiry = null;
 $privileges = null;
+//Attempts to login with the given information
 try {
 	$ks = $client->user->loginByLoginId($loginId, $password, $partnerId, $expiry, $privileges);
 	echo $ks;
 }
+//If this fails, return the correct message to the user
 catch(Exception $ex) {
 	if(strpos($ex->getMessage(), 'Unknown') === false)
 		echo 'loginfail';

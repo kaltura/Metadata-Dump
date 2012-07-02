@@ -1,34 +1,27 @@
 <?php
+//Sets the header so that the document is download as a .xls file and ensures
+//that it will not timeout before it is finished creating the file
 set_time_limit(0);
 header("Content-Type: application/vnd.ms-excel; charset=UTF-8");
 header("Content-Disposition: inline; filename=\"metadata.xls\"");
 header("Set-Cookie: fileDownload=true; path=/");
 echo stripslashes("<?xml version=\"1.0\" encoding=\"UTF-8\"?\>\n<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:html=\"http://www.w3.org/TR/REC-html40\">");
 echo "\n<Worksheet ss:Name=\"metadata\">\n<Table>\n";
-
-function generateCell($column, $row) {
-	$cell = "";
-	if($column/26 < 1) {
-		$cell = sprintf("%c%d", 65 + $column, $row);
-	}
-	else {
-		$cell = sprintf("%c%c%d", 65 + (int)($column / 26 - 1), 65 + ($column % 26), $row);
-	}
-	return $cell;
-}
-
+//Includes the client library and starts a Kaltura session to access the API
+//More informatation about this process can be found at
+//http://knowledge.kaltura.com/introduction-kaltura-client-libraries
 require_once('lib/php5/KalturaClient.php');
 $config = new KalturaConfiguration($_REQUEST['partnerId']);
 $config->serviceUrl = 'http://www.kaltura.com/';
 $client = new KalturaClient($config);
 $client->setKs($_REQUEST['session']);
-
 echo "<Row>\n";
 $pager = new KalturaFilterPager();
 $pager->pageSize = 1;
 $filter = new KalturaMediaEntryFilter();
 $filter->orderBy = "-createdAt";
 $results = $client->media->listAction($filter, $pager);
+//Creates the top row for the excel file
 $entry = $results->objects[0];
 foreach($entry as $data => $value) {
 	echo "<Cell><Data ss:Type=\"String\">".$data."</Data></Cell>\n";
@@ -41,6 +34,9 @@ $metaFound = false;
 $metaKeys = array();
 $keyCount = 0;
 $cont = true;
+//This first loop simply parses every media entry to retrieve the full list of
+//custom metadata categories. This needs to be done seperately because the organization
+//of the rest of the spreadsheet is determined by these categories.
 while($cont) {
 	//Instead of using a page index, the entries are retrieved by creation date
 	//This is the only way to ensure that the server retrieves all of the entries
@@ -53,9 +49,8 @@ while($cont) {
 		$filter->idNotIn = $lastEntryIds;
 	$results = $client->media->listAction($filter, $pager);
 	//If no entries are retrieved the loop may end
-	if(count($results->objects) == 0) {
+	if(count($results->objects) == 0)
 		$cont = false;
-	}
 	else {
 		$entryIds = "";
 		foreach($results->objects as $entry)
@@ -63,6 +58,7 @@ while($cont) {
 		$metadataFilter = new KalturaMetadataFilter();
 		$metadataFilter->objectIdIn = $entryIds;
 		$metaResults = $client->metadata->listAction($metadataFilter, $pager)->objects;
+		//Retrives the general metadata categories such as version and metadataProfileId
 		if($metaFound == false) {
 			if(count($metaResults) > 0) {
 				foreach($metaResults[0] as $key => $value) {
@@ -74,6 +70,7 @@ while($cont) {
 				}
 			}
 		}
+		//Retrieves the custom metadata categories that are specific to each metadata profile
 		foreach($metaResults as $metaResult) {
 			$metadataProfileId = $metaResult->metadataProfileId;
 			$xml = simplexml_load_string($metaResult->xml);
@@ -94,7 +91,7 @@ while($cont) {
 	}
 }
 echo "</Row>\n";
-
+//Retrieves all the information for the media entries including their basic and custom metadata
 $lastCreatedAt = 0;
 $lastEntryIds = "";
 $cont = true;
@@ -110,13 +107,13 @@ while($cont) {
 		$filter->idNotIn = $lastEntryIds;
 	$results = $client->media->listAction($filter, $pager);
 	//If no entries are retrieved the loop may end
-	if(count($results->objects) == 0) {
+	if(count($results->objects) == 0)
 		$cont = false;
-	}
 	else {
 		foreach($results->objects as $entry) {
 			$metaFound = false;
 			echo "<Row>\n";
+			//Retrieves the basic metadata
 			foreach($entry as $data => $value) {
 				if(is_string($value) || is_numeric($value))
 					echo "<Cell><Data ss:Type=\"String\">".$value."</Data></Cell>\n";
@@ -127,12 +124,13 @@ while($cont) {
 			$metadataFilter->objectIdIn = $entry->id;
 			$metaResults = $client->metadata->listAction($metadataFilter, $pager)->objects;
 			$customMeta = array();
+			//Retrieves the general/custom metadata information for each media entry
+			//and organizes it to ensure that the columns are aligned for each category
 			foreach($metaResults as $metaResult) {
 				if(!$metaFound) {
 					foreach($metaResult as $key => $value) {
-						if($key != 'xml') {
+						if($key != 'xml')
 							echo "<Cell><Data ss:Type=\"String\">".$value."</Data></Cell>\n";
-						}
 					}
 					$metaFound = true;
 				}
@@ -140,9 +138,8 @@ while($cont) {
 				$xml = simplexml_load_string($metaResult->xml);
 				foreach($xml as $key => $value) {
 					$index = $metadataProfileId.'_'.$key;
-					if(array_key_exists($index, $metaKeys)) {
+					if(array_key_exists($index, $metaKeys))
 						$customMeta[$metaKeys[$index]] = $value;
-					}
 				}
 			}
 			$count = 0;
