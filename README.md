@@ -18,5 +18,6 @@ Folders
 * lib/jquery.fileDownload - Contains the plugin for simulating jQuery file downloading
 	(https://github.com/johnculviner/jquery.fileDownload)
 * lib/jQueryUI - Contains the script and images for jQuery downloading
+	(http://jqueryui.com/)
 * lib/php5 - Contains the Kaltura PHP5 client library
 	(http://www.kaltura.com/api_v3/testme/client-libs.php) 
