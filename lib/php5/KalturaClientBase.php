@@ -951,8 +951,8 @@ class KalturaConfiguration
 	public $partnerId    				= null;
 	public $format        				= 3;
 	public $clientTag 	  				= "php5";
-	public $curlTimeout   				= 10;
-	public $userAgent					= '';
+	public $curlTimeout   				= 30;
+	public $userAgent					= 'Kaltura Metadata-Dump Application';
 	public $startZendDebuggerSession 	= false;
 	public $proxyHost                   = null;
 	public $proxyPort                   = null;
@@ -960,7 +960,7 @@ class KalturaConfiguration
 	public $proxyUser                   = null;
 	public $proxyPassword               = '';
 	public $verifySSL 					= true;
-	public $requestHeaders				= array();
+	public $requestHeaders				= array('Expect:'); //http://the-stickman.com/web-development/php-and-curl-disabling-100-continue-header/
 
 	
 	

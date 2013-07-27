@@ -2,6 +2,11 @@
 //Sets the header so that the document is download as a .xls file and ensures
 //that it will not timeout before it is finished creating the file
 set_time_limit(0);
+
+function xmlspecialchars($text) {
+   return str_replace('&#039;', '&apos;', htmlspecialchars($text, ENT_QUOTES));
+}
+
 header("Content-Type: application/vnd.ms-excel; charset=UTF-8");
 header("Content-Disposition: inline; filename=\"categories.xls\"");
 header("Set-Cookie: fileDownload=true; path=/");
@@ -23,7 +28,7 @@ foreach($categories as $category) {
 	if(!$categoryFound) {
 		echo "<Row>\n";
 		foreach($categories[0] as $key => $value) {
-			echo "<Cell><Data ss:Type=\"String\">".$key."</Data></Cell>\n";
+			echo "<Cell><Data ss:Type=\"String\">".xmlspecialchars($key)."</Data></Cell>\n";
 		}
 		echo "</Row>\n";
 		$categoryFound = true;
@@ -31,7 +36,7 @@ foreach($categories as $category) {
 	//Otherwise every iteration creates one line with each category available
 	echo "<Row>\n";
 	foreach($category as $value)
-		echo "<Cell><Data ss:Type=\"String\">".$value."</Data></Cell>\n";
+		echo "<Cell><Data ss:Type=\"String\">".xmlspecialchars($value)."</Data></Cell>\n";
 	echo "</Row>\n";
 }
 echo "</Table>\n</Worksheet>\n";

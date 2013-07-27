@@ -2,6 +2,11 @@
 //Sets the header so that the document is download as a .xls file and ensures
 //that it will not timeout before it is finished creating the file
 set_time_limit(0);
+
+function xmlspecialchars($text) {
+   return str_replace('&#039;', '&apos;', htmlspecialchars($text, ENT_QUOTES));
+}
+
 header("Content-Type: application/vnd.ms-excel; charset=UTF-8");
 header("Content-Disposition: inline; filename=\"metadata.xls\"");
 header("Set-Cookie: fileDownload=true; path=/");
@@ -27,7 +32,7 @@ foreach($entry as $data => $value) {
 	echo "<Cell><Data ss:Type=\"String\">".$data."</Data></Cell>\n";
 }
 $pager = new KalturaFilterPager();
-$pager->pageSize = 500;
+$pager->pageSize = 400;
 $lastCreatedAt = 0;
 $lastEntryIds = "";
 $metaFound = false;
@@ -47,6 +52,7 @@ while($cont) {
 		$filter->createdAtLessThanOrEqual = $lastCreatedAt;
 	if($lastEntryIds != "")
 		$filter->idNotIn = $lastEntryIds;
+	//sleep(1);
 	$results = $client->media->listAction($filter, $pager);
 	//If no entries are retrieved the loop may end
 	if(count($results->objects) == 0)
@@ -57,12 +63,13 @@ while($cont) {
 			$entryIds .= $entry->id.',';
 		$metadataFilter = new KalturaMetadataFilter();
 		$metadataFilter->objectIdIn = $entryIds;
+		//sleep(1);
 		$metaResults = $client->metadata->listAction($metadataFilter, $pager)->objects;
 		//Retrives the general metadata categories such as version and metadataProfileId
 		if($metaFound == false) {
 			if(count($metaResults) > 0) {
 				foreach($metaResults[0] as $key => $value) {
-					echo "<Cell><Data ss:Type=\"String\">".$key."</Data></Cell>\n";
+					echo "<Cell><Data ss:Type=\"String\">".xmlspecialchars($key)."</Data></Cell>\n";
 					if(strcmp($key, 'status') == 0) {
 							$metaFound = true;
 							break;
@@ -78,7 +85,7 @@ while($cont) {
 				$index = $metadataProfileId.'_'.$key;
 				if(!array_key_exists($index, $metaKeys)) {
 					$metaKeys[$index] = $keyCount++;
-					echo "<Cell><Data ss:Type=\"String\">".$index."</Data></Cell>\n";
+					echo "<Cell><Data ss:Type=\"String\">".xmlspecialchars($index)."</Data></Cell>\n";
 				}
 			}
 		}
@@ -105,6 +112,7 @@ while($cont) {
 		$filter->createdAtLessThanOrEqual = $lastCreatedAt;
 	if($lastEntryIds != "")
 		$filter->idNotIn = $lastEntryIds;
+	//sleep(1);
 	$results = $client->media->listAction($filter, $pager);
 	//If no entries are retrieved the loop may end
 	if(count($results->objects) == 0)
@@ -116,12 +124,13 @@ while($cont) {
 			//Retrieves the basic metadata
 			foreach($entry as $data => $value) {
 				if(is_string($value) || is_numeric($value))
-					echo "<Cell><Data ss:Type=\"String\">".$value."</Data></Cell>\n";
+					echo "<Cell><Data ss:Type=\"String\">".xmlspecialchars($value)."</Data></Cell>\n";
 				else 
 					echo "<Cell><Data ss:Type=\"String\"></Data></Cell>\n";
 			}
 			$metadataFilter = new KalturaMetadataFilter();
 			$metadataFilter->objectIdIn = $entry->id;
+			//sleep(1);
 			$metaResults = $client->metadata->listAction($metadataFilter, $pager)->objects;
 			$customMeta = array();
 			//Retrieves the general/custom metadata information for each media entry
@@ -130,7 +139,7 @@ while($cont) {
 				if(!$metaFound) {
 					foreach($metaResult as $key => $value) {
 						if($key != 'xml')
-							echo "<Cell><Data ss:Type=\"String\">".$value."</Data></Cell>\n";
+							echo "<Cell><Data ss:Type=\"String\">".xmlspecialchars($value)."</Data></Cell>\n";
 					}
 					$metaFound = true;
 				}
@@ -148,7 +157,7 @@ while($cont) {
 					echo "<Cell><Data ss:Type=\"String\"></Data></Cell>\n";
 					++$count;
 				}
-				echo "<Cell><Data ss:Type=\"String\">".$customMeta[$count]."</Data></Cell>\n";
+				echo "<Cell><Data ss:Type=\"String\">".xmlspecialchars($customMeta[$count])."</Data></Cell>\n";
 				++$count;
 			}
 			echo "</Row>\n";
