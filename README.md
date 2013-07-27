@@ -22,7 +22,7 @@ Folders
 * lib/php5 - Contains the Kaltura PHP5 client library
 	(http://www.kaltura.com/api_v3/testme/client-libs.php) 
 
-License and Copyright Information
+License, Warranty and Copyright Information
 -------
 
 This project is released under the [Affero GPL v3](http://www.gnu.org/licenses/agpl-3.0.html) licsense, unless a different license for a particular library is specified in the applicable library path.  
