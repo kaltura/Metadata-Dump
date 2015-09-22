@@ -8,7 +8,7 @@ require_once('lib/php5/KalturaClient.php');
 //Use user->loginByLoginId rather than adminUser->login which has been deprecated
 $partnerId = $_REQUEST['partnerId'];
 $config = new KalturaConfiguration($partnerId);
-$config->serviceUrl = 'http://www.kaltura.com/';
+$config->serviceUrl = 'https://www.kaltura.com/';
 $client = new KalturaClient($config);
 $loginId = $_REQUEST['email'];
 $password = $_REQUEST['password'];

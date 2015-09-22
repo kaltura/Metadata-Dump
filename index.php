@@ -7,7 +7,7 @@
 	<link href="metadataStyle.css" media="screen" rel="stylesheet" type="text/css" />
 	<link href="lib/jQueryUI/jquery-ui-1.8.18.custom.css" rel="stylesheet" type="text/css" />
 	<!-- Script Includes -->
-	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js" type="text/javascript"></script>
     <script src="lib/jquery.fileDownload/jquery.fileDownload.js" type="text/javascript"></script>
 	<!-- Page Scripts -->
@@ -15,10 +15,10 @@
 		var kalturaSession = "";
 		var partnerId = 0;
 		
-		//Validation written with help from http://yensdesign.com/tutorials/validateform/validation.js
-		//Makes sure that the email/partner ID/password are valid for login submission
+		// A resonably practical implementation of RFC 5322
+		// http://tools.ietf.org/html/rfc5322#section-3.4
 		function validEmail(input) {
-			var filter = /^[a-zA-Z0-9]+[a-zA-Z0-9_.-]+[a-zA-Z0-9_-]+@[a-zA-Z0-9]+[a-zA-Z0-9.-]+[a-zA-Z0-9]+.[a-z]{2,4}$/;
+			var filter = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i;
 			if(!filter.test(input.value)) {
 				input.setCustomValidity("Invalid email");
 				return false;

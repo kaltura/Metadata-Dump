@@ -17,7 +17,7 @@ echo "\n<Worksheet ss:Name=\"metadata\">\n<Table>\n";
 //http://knowledge.kaltura.com/introduction-kaltura-client-libraries
 require_once('lib/php5/KalturaClient.php');
 $config = new KalturaConfiguration($_REQUEST['partnerId']);
-$config->serviceUrl = 'http://www.kaltura.com/';
+$config->serviceUrl = 'https://www.kaltura.com/';
 $client = new KalturaClient($config);
 $client->setKs($_REQUEST['session']);
 echo "<Row>\n";
