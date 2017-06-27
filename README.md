@@ -2,6 +2,8 @@ Kaltura Metadata and Categories to Excel Export Tool
 ==================
 A tool to export all of your entries' custom metadata or categories to an excel file. 
 
+> This is an old script that is no longer maintained. Please refer to the new script at: [Kaltura-Library-Export-Excel](https://github.com/kaltura/Kaltura-Library-Export-Excel)
+
 Files
 -----
 
